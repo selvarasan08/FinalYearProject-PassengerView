@@ -1,0 +1,38 @@
+.p-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.4rem;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.p-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+}
+
+.p-brand-icon { font-size: 1.6rem; }
+
+.p-brand-name {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.p-brand-sub {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

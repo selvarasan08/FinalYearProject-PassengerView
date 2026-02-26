@@ -1,0 +1,190 @@
+.asp-page {
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 1.2rem 1rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* Hero */
+.asp-hero {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.asp-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+  margin-bottom: 0.4rem;
+}
+
+.asp-sub {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.2rem;
+}
+
+.asp-stats-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.8rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.asp-stat { display: flex; flex-direction: column; align-items: center; }
+.asp-stat-num { font-size: 1.5rem; font-weight: 800; color: var(--accent2); }
+.asp-stat-lbl { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+.asp-stat-divider { width: 1px; height: 32px; background: var(--border); }
+
+/* Map */
+.asp-map-wrap {
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.asp-map-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Search */
+.asp-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.asp-search-icon {
+  position: absolute;
+  left: 1rem;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.asp-search {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 0.8rem 1rem 0.8rem 2.8rem;
+  font-family: var(--font);
+  font-size: 0.92rem;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s;
+}
+.asp-search:focus { outline: none; border-color: var(--accent2); }
+.asp-search::placeholder { color: var(--text-light); }
+
+/* Stop list */
+.asp-stop-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.asp-stop-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  color: var(--text);
+  padding: 1rem 1.1rem;
+  transition: all 0.18s;
+}
+
+.asp-stop-card:hover {
+  border-color: var(--accent2);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.asp-stop-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.asp-stop-icon-sm {
+  font-size: 1.4rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.asp-stop-name {
+  font-weight: 700;
+  font-size: 0.97rem;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.asp-stop-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.asp-stop-code {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 0.1rem 0.45rem;
+  border-radius: 5px;
+}
+
+.asp-stop-addr { font-size: 0.78rem; color: var(--text-muted); }
+
+.asp-route-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+
+.asp-route-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #eff6ff;
+  color: var(--accent2);
+  border: 1px solid #bfdbfe;
+  padding: 0.1rem 0.5rem;
+  border-radius: 6px;
+}
+
+.asp-arrow {
+  color: var(--text-light);
+  font-size: 1.1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.asp-loading, .asp-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.asp-footer {
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.78rem;
+  line-height: 2;
+  padding-top: 0.5rem;
+}

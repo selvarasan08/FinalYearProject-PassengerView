@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #f7fafc;
+  --border: #e2e8f0;
+  --accent: #0f4c81;
+  --accent-light: #e8f0fc;
+  --accent2: #2563eb;
+  --green: #059669;
+  --green-bg: #ecfdf5;
+  --yellow: #d97706;
+  --yellow-bg: #fffbeb;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --text: #1a202c;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --font: 'Plus Jakarta Sans', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(15, 76, 129, 0.08);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Buttons */
+.btn {
+  font-family: var(--font);
+  font-weight: 600;
+  padding: 0.65rem 1.4rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-size: 0.92rem;
+}
+.btn-primary { background: var(--accent2); color: white; }
+.btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+.btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--accent2); color: var(--accent2); }
+.btn-sm { padding: 0.4rem 1rem; font-size: 0.82rem; border-radius: 8px; }
+
+/* Live pulse */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid rgba(5,150,105,0.25);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.live-dot-wrap {
+  position: relative;
+  width: 8px;
+  height: 8px;
+}
+.live-dot {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--green);
+}
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-ring 1.5s infinite;
+}
+
+/* Leaflet fix */
+.leaflet-container { border-radius: var(--radius); }
