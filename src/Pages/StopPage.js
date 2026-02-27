@@ -15,6 +15,124 @@ L.Icon.Default.mergeOptions({
 });
 
 /* ═══════════════════════════════════════════════════════════════════
+   MAP TILE LAYERS
+   ═══════════════════════════════════════════════════════════════════ */
+const MAP_STYLES = [
+  {
+    id: 'dark',
+    label: 'Dark',
+    icon: '🌑',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap',
+    filter: 'invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.8)',
+    extraLayer: null,
+  },
+  {
+    id: 'satellite',
+    label: 'Satellite',
+    icon: '🛰️',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© Esri, Maxar, Earthstar Geographics',
+    filter: 'none',
+    // Labels overlay on top of satellite
+    extraLayer: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+  },
+  {
+    id: 'street',
+    label: 'Street',
+    icon: '🗺️',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors',
+    filter: 'none',
+    extraLayer: null,
+  },
+];
+
+/* ─── TileLayerSwitcher: swaps tile layer without remounting map ─── */
+function TileLayerSwitcher({ style }) {
+  return (
+    <>
+      <TileLayer key={style.id} url={style.url} attribution={style.attribution} />
+      {style.extraLayer && (
+        <TileLayer key={style.id + '-labels'} url={style.extraLayer} attribution="" />
+      )}
+    </>
+  );
+}
+
+/* ─── MapStyleSwitcher UI control ──────────────────────────────── */
+function MapStyleSwitcher({ current, onChange }) {
+  const [open, setOpen] = useState(false);
+  const currentStyle = MAP_STYLES.find(s => s.id === current) || MAP_STYLES[0];
+
+  return (
+    <div className="map-style-switcher" style={{ position: 'absolute', top: 10, right: 10, zIndex: 900 }}>
+      {/* Collapsed button */}
+      <button
+        className="map-style-btn"
+        onClick={() => setOpen(o => !o)}
+        title="Change map style"
+        style={{
+          display: 'flex', alignItems: 'center', gap: '0.35rem',
+          background: 'rgba(6,11,24,.92)', backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,159,10,.35)', borderRadius: '10px',
+          padding: '.38rem .7rem', cursor: 'pointer', color: '#fff',
+          fontSize: '.7rem', fontWeight: 700, fontFamily: 'var(--mono)',
+          boxShadow: '0 4px 16px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04)',
+          transition: 'all .18s', whiteSpace: 'nowrap',
+          letterSpacing: '.03em',
+        }}
+      >
+        <span style={{ fontSize: '.85rem' }}>{currentStyle.icon}</span>
+        <span style={{ color: 'var(--amber)' }}>{currentStyle.label}</span>
+        <span style={{ color: 'rgba(255,255,255,.35)', fontSize: '.65rem', marginLeft: '2px' }}>
+          {open ? '▲' : '▼'}
+        </span>
+      </button>
+
+      {/* Expanded style grid */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+          background: 'rgba(6,11,24,.97)', backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255,159,10,.2)', borderRadius: '12px',
+          padding: '.45rem',
+          display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '.3rem',
+          minWidth: '130px',
+          boxShadow: '0 8px 32px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04)',
+          animation: 'styleDropIn .2s cubic-bezier(0.34,1.26,0.64,1) both',
+        }}>
+          {MAP_STYLES.map(style => (
+            <button
+              key={style.id}
+              onClick={() => { onChange(style.id); setOpen(false); }}
+              title={style.label}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.2rem',
+                padding: '.45rem .3rem', borderRadius: '8px', cursor: 'pointer',
+                border: current === style.id
+                  ? '1.5px solid rgba(255,159,10,.6)'
+                  : '1.5px solid rgba(255,255,255,.06)',
+                background: current === style.id
+                  ? 'rgba(255,159,10,.12)'
+                  : 'rgba(255,255,255,.03)',
+                color: current === style.id ? 'var(--amber)' : 'rgba(255,255,255,.55)',
+                fontSize: '.62rem', fontWeight: 700, fontFamily: 'var(--mono)',
+                letterSpacing: '.03em',
+                transition: 'all .15s',
+              }}
+            >
+              <span style={{ fontSize: '1.1rem' }}>{style.icon}</span>
+              <span>{style.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    CUSTOM MAP ICONS — pure CSS/SVG, no external images
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -29,14 +147,12 @@ const makeBusIcon = (busNumber, speed, urgency) => {
     html: `
       <style>
         .bic${busNumber}{position:relative;width:72px;height:64px;display:flex;flex-direction:column;align-items:center;}
-        /* Exhaust particles */
         .bic${busNumber} .exhaust{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:1;}
         .bic${busNumber} .ex{width:4px;height:4px;border-radius:50%;background:rgba(${urgency==='red'?'255,77,106':'0,214,143'},.6);
           animation:exFloat 1.2s ease-out infinite;}
         .bic${busNumber} .ex:nth-child(2){animation-delay:.3s;width:3px;height:3px;}
         .bic${busNumber} .ex:nth-child(3){animation-delay:.6s;width:2px;height:2px;}
         @keyframes exFloat{0%{transform:translateY(0) scale(1);opacity:.7;}100%{transform:translateY(-16px) scale(0);opacity:0;}}
-        /* Main body */
         .bic${busNumber} .body{
           width:62px;height:42px;
           background:linear-gradient(160deg,#0f2040,#081528);
@@ -49,25 +165,21 @@ const makeBusIcon = (busNumber, speed, urgency) => {
           overflow:hidden;
         }
         @keyframes busFloat{from{transform:translateY(0);}to{transform:translateY(-4px);}}
-        /* Shine streak */
         .bic${busNumber} .body::after{
           content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
           background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);
           animation:busShine 3.5s ease-in-out infinite;
         }
         @keyframes busShine{0%,100%{left:-100%;}50%{left:120%;}}
-        /* Windows row */
         .bic${busNumber} .windows{display:flex;gap:3px;}
         .bic${busNumber} .win{width:8px;height:6px;border-radius:2px;background:rgba(0,229,255,.3);border:1px solid rgba(0,229,255,.4);}
         .bic${busNumber} .win.lit{background:rgba(255,214,10,.4);border-color:rgba(255,214,10,.5);animation:winBlink 2.4s ease infinite;}
         @keyframes winBlink{0%,100%{opacity:1;}50%{opacity:.5;}}
-        /* Number plate */
         .bic${busNumber} .plate{
           font-family:'Space Mono',monospace;font-size:.6rem;font-weight:700;
           color:${color};letter-spacing:.05em;
           text-shadow:0 0 8px ${shadow};
         }
-        /* Shadow on ground */
         .bic${busNumber} .gnd{
           width:44px;height:7px;
           background:radial-gradient(${shadow},transparent 70%);
@@ -76,7 +188,6 @@ const makeBusIcon = (busNumber, speed, urgency) => {
           position:relative;z-index:2;
         }
         @keyframes gndPulse{from{transform:scaleX(.8);opacity:.6;}to{transform:scaleX(1.1);opacity:1;}}
-        /* Speed ring */
         .bic${busNumber} .sring{
           position:absolute;top:-6px;left:50%;transform:translateX(-50%);
           width:70px;height:70px;border-radius:50%;z-index:0;
@@ -130,7 +241,6 @@ const makeMyStopIcon = () => L.divIcon({
         animation:diamondPop .3s cubic-bezier(0.34,1.56,0.64,1) both;
       }
       @keyframes diamondPop{from{transform:rotate(45deg) scale(0);}to{transform:rotate(45deg) scale(1);}}
-      /* Inner shine */
       .myst-diamond::after{
         content:'';position:absolute;
         top:4px;left:4px;
@@ -249,6 +359,7 @@ export default function StopPage() {
   const [activeBus,    setActiveBus]    = useState(0);
   const [locState,     setLocState]     = useState(LOC.IDLE);
   const [myPos,        setMyPos]        = useState(null);
+  const [mapStyleId,   setMapStyleId]   = useState('dark');  // ← NEW
   const watchRef = useRef(null);
   const timerRef = useRef(null);
   const countRef = useRef(null);
@@ -305,6 +416,9 @@ export default function StopPage() {
   const fmtMin  = m => m === 0 ? 'Now!' : m === 1 ? '1 min' : `${m} min`;
   const fmtLong = m => m === 0 ? 'Arriving now' : `${m} min${m !== 1 ? 's' : ''} away`;
   const etaPct  = m => Math.max(5, Math.min(100, 100 - (m / 30) * 100));
+
+  // Resolve active style object
+  const activeStyle = MAP_STYLES.find(s => s.id === mapStyleId) || MAP_STYLES[0];
 
   /* ── Loading ── */
   if (loading) return (
@@ -436,10 +550,19 @@ export default function StopPage() {
               <MapContainer center={mapCenter} zoom={14}
                 style={{ width:'100%', height:'100%' }}
                 scrollWheelZoom={false} zoomControl={true}>
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='© OpenStreetMap'
-                />
+
+                {/* ── Tile layer (swappable) ── */}
+                <TileLayerSwitcher style={activeStyle} />
+
+                {/* ── CSS filter for dark mode ── */}
+                <style>{`
+                  .leaflet-tile-pane { filter: ${activeStyle.filter}; transition: filter .4s ease; }
+                  @keyframes styleDropIn {
+                    from { opacity: 0; transform: translateY(-6px) scale(.97); }
+                    to   { opacity: 1; transform: translateY(0) scale(1); }
+                  }
+                `}</style>
+
                 {fitPoints.length > 1 && <AutoFit points={fitPoints} />}
 
                 {/* Passed route */}
@@ -503,6 +626,10 @@ export default function StopPage() {
                     </Marker>
                   </>
                 )}
+
+                {/* ── Map style switcher control ── */}
+                <MapStyleSwitcher current={mapStyleId} onChange={setMapStyleId} />
+
               </MapContainer>
             ) : (
               <div className="sp-map-empty"><span>🗺</span><p>Map unavailable</p></div>

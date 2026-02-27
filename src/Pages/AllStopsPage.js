@@ -13,6 +13,115 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+/* ═══════════════════════════════════════════════════════════════════
+   MAP TILE LAYERS
+   ═══════════════════════════════════════════════════════════════════ */
+const MAP_STYLES = [
+  {
+    id: 'dark',
+    label: 'Dark',
+    icon: '🌑',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap',
+    filter: 'invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.8)',
+    extraLayer: null,
+  },
+  {
+    id: 'satellite',
+    label: 'Satellite',
+    icon: '🛰️',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© Esri, Maxar, Earthstar Geographics',
+    filter: 'none',
+    extraLayer: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+  },
+  {
+    id: 'street',
+    label: 'Street',
+    icon: '🗺️',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors',
+    filter: 'none',
+    extraLayer: null,
+  },
+];
+
+/* ─── MapStyleSwitcher UI control ───────────────────────────────── */
+function MapStyleSwitcher({ current, onChange }) {
+  const [open, setOpen] = useState(false);
+  const currentStyle = MAP_STYLES.find(s => s.id === current) || MAP_STYLES[0];
+
+  return (
+    <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 900 }}>
+      {/* Collapsed pill button */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        title="Change map style"
+        style={{
+          display: 'flex', alignItems: 'center', gap: '0.35rem',
+          background: 'rgba(6,11,24,.92)', backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,159,10,.35)', borderRadius: '10px',
+          padding: '.38rem .7rem', cursor: 'pointer', color: '#fff',
+          fontSize: '.7rem', fontWeight: 700, fontFamily: "'Space Mono', monospace",
+          boxShadow: '0 4px 16px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04)',
+          transition: 'all .18s', whiteSpace: 'nowrap', letterSpacing: '.03em',
+        }}
+      >
+        <span style={{ fontSize: '.85rem' }}>{currentStyle.icon}</span>
+        <span style={{ color: '#ff9f0a' }}>{currentStyle.label}</span>
+        <span style={{ color: 'rgba(255,255,255,.35)', fontSize: '.65rem', marginLeft: '2px' }}>
+          {open ? '▲' : '▼'}
+        </span>
+      </button>
+
+      {/* Expanded grid */}
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+          background: 'rgba(6,11,24,.97)', backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255,159,10,.2)', borderRadius: '12px',
+          padding: '.45rem',
+          display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '.3rem',
+          minWidth: '130px',
+          boxShadow: '0 8px 32px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04)',
+          animation: 'aspStyleDropIn .2s cubic-bezier(0.34,1.26,0.64,1) both',
+        }}>
+          <style>{`
+            @keyframes aspStyleDropIn {
+              from { opacity: 0; transform: translateY(-6px) scale(.97); }
+              to   { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            .asp-map-tile-filtered { filter: var(--asp-tile-filter, none); }
+          `}</style>
+          {MAP_STYLES.map(style => (
+            <button
+              key={style.id}
+              onClick={() => { onChange(style.id); setOpen(false); }}
+              title={style.label}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.2rem',
+                padding: '.45rem .3rem', borderRadius: '8px', cursor: 'pointer',
+                border: current === style.id
+                  ? '1.5px solid rgba(255,159,10,.6)'
+                  : '1.5px solid rgba(255,255,255,.06)',
+                background: current === style.id
+                  ? 'rgba(255,159,10,.12)'
+                  : 'rgba(255,255,255,.03)',
+                color: current === style.id ? '#ff9f0a' : 'rgba(255,255,255,.55)',
+                fontSize: '.62rem', fontWeight: 700, fontFamily: "'Space Mono', monospace",
+                letterSpacing: '.03em', transition: 'all .15s',
+              }}
+            >
+              <span style={{ fontSize: '1.1rem' }}>{style.icon}</span>
+              <span>{style.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── CUSTOM MAP ICONS ────────────────────────────────────────────────
    Pure SVG + CSS animations injected via Leaflet divIcon.
    All rendered client-side, no image files needed.
@@ -80,7 +189,6 @@ const makeBusIcon = (busNumber, speed) => L.divIcon({
       .mbi-emoji{font-size:1.3rem;line-height:1;filter:drop-shadow(0 0 6px rgba(0,214,143,0.6));}
       .mbi-num{font-family:'Space Mono',monospace;font-size:0.68rem;font-weight:700;color:#00d68f;letter-spacing:.02em;white-space:nowrap;}
       .mbi-speed{font-size:0.58rem;color:rgba(0,214,143,0.6);font-family:monospace;white-space:nowrap;}
-      /* Speed lines */
       .mbi-lines{position:absolute;left:-14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3px;}
       .mbi-line{height:1.5px;border-radius:1px;background:linear-gradient(90deg,transparent,#00d68f);
         animation:mbiLine 0.8s ease-in-out infinite;}
@@ -88,7 +196,6 @@ const makeBusIcon = (busNumber, speed) => L.divIcon({
       .mbi-line:nth-child(2){width:7px;animation-delay:.15s;}
       .mbi-line:nth-child(3){width:5px;animation-delay:.3s;}
       @keyframes mbiLine{0%,100%{opacity:.3;transform:scaleX(.6);}50%{opacity:1;transform:scaleX(1);}}
-      /* Tail arrow */
       .mbi-arrow{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid #00d68f;margin-top:-2px;position:relative;z-index:1;opacity:.9;}
     </style>
     <div class="mbi-wrap">
@@ -112,10 +219,11 @@ const makeBusIcon = (busNumber, speed) => L.divIcon({
 
 /* ─── Component ──────────────────────────────────────────────────── */
 export default function AllStopsPage() {
-  const [stops,   setStops]   = useState([]);
-  const [buses,   setBuses]   = useState([]);
-  const [search,  setSearch]  = useState('');
-  const [loading, setLoading] = useState(true);
+  const [stops,      setStops]      = useState([]);
+  const [buses,      setBuses]      = useState([]);
+  const [search,     setSearch]     = useState('');
+  const [loading,    setLoading]    = useState(true);
+  const [mapStyleId, setMapStyleId] = useState('dark');   // ← NEW
 
   useEffect(() => {
     const init = async () => {
@@ -144,6 +252,9 @@ export default function AllStopsPage() {
 
   // Stripe colour cycles
   const stripeClass = (i) => `s${i % 4}`;
+
+  // Active style object
+  const activeStyle = MAP_STYLES.find(s => s.id === mapStyleId) || MAP_STYLES[0];
 
   return (
     <div className="asp-page">
@@ -180,39 +291,62 @@ export default function AllStopsPage() {
               {buses.length} active
             </div>
           </div>
-          <MapContainer center={mapCenter} zoom={12} style={{ height: 290 }} scrollWheelZoom={false}>
-            <TileLayer
-              attribution='© OpenStreetMap'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {stops.map(stop => (
-              <Marker
-                key={stop._id}
-                position={[stop.location.coordinates[1], stop.location.coordinates[0]]}
-                icon={makeStopIcon()}
-              >
-                <Popup>
-                  <strong>🚏 {stop.name}</strong>
-                  <span style={{fontSize:'0.75rem',color:'#4e6285'}}>{stop.stopCode} · {stop.address}</span>
-                  <a href={`/stop/${stop._id}`}>View arrivals →</a>
-                </Popup>
-              </Marker>
-            ))}
-            {buses.map(bus => {
-              const lat = bus.currentLocation?.coordinates[1];
-              const lng = bus.currentLocation?.coordinates[0];
-              if (!lat || !lng) return null;
-              return (
-                <Marker key={bus._id} position={[lat, lng]}
-                  icon={makeBusIcon(bus.busNumber, bus.speed || 0)}>
+
+          {/* Map with style switcher */}
+          <div style={{ position: 'relative' }}>
+            <MapContainer center={mapCenter} zoom={12} style={{ height: 290 }} scrollWheelZoom={false}>
+
+              <style>{`
+                .leaflet-tile-pane { filter: ${activeStyle.filter}; transition: filter .4s ease; }
+              `}</style>
+
+              <TileLayer
+                key={activeStyle.id}
+                attribution={activeStyle.attribution}
+                url={activeStyle.url}
+              />
+              {activeStyle.extraLayer && (
+                <TileLayer
+                  key={activeStyle.id + '-labels'}
+                  url={activeStyle.extraLayer}
+                  attribution=""
+                />
+              )}
+
+              {stops.map(stop => (
+                <Marker
+                  key={stop._id}
+                  position={[stop.location.coordinates[1], stop.location.coordinates[0]]}
+                  icon={makeStopIcon()}
+                >
                   <Popup>
-                    <strong>🚌 {bus.busNumber}</strong>
-                    Route {bus.route?.routeNumber} · {bus.speed || 0} km/h
+                    <strong>🚏 {stop.name}</strong>
+                    <span style={{fontSize:'0.75rem',color:'#4e6285'}}>{stop.stopCode} · {stop.address}</span>
+                    <a href={`/stop/${stop._id}`}>View arrivals →</a>
                   </Popup>
                 </Marker>
-              );
-            })}
-          </MapContainer>
+              ))}
+
+              {buses.map(bus => {
+                const lat = bus.currentLocation?.coordinates[1];
+                const lng = bus.currentLocation?.coordinates[0];
+                if (!lat || !lng) return null;
+                return (
+                  <Marker key={bus._id} position={[lat, lng]}
+                    icon={makeBusIcon(bus.busNumber, bus.speed || 0)}>
+                    <Popup>
+                      <strong>🚌 {bus.busNumber}</strong>
+                      Route {bus.route?.routeNumber} · {bus.speed || 0} km/h
+                    </Popup>
+                  </Marker>
+                );
+              })}
+
+              {/* ── Map style switcher ── */}
+              <MapStyleSwitcher current={mapStyleId} onChange={setMapStyleId} />
+
+            </MapContainer>
+          </div>
         </div>
       )}
 
