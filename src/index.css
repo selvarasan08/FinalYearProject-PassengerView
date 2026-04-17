@@ -2,12 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
-* {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+/* =============================================
+   SALEMONE PASSENGER — Updated Typography & Animations
+   New Font: Outfit (Premium Modern Sans)
+   ============================================= */
+
+:root {
+  --font-primary: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', monospace;
 }
 
+/* Global Font Reset */
+*,
+*::before,
+*::after {
+  font-family: var(--font-primary);
+}
+
+/* Headings & Display Text - Premium Feel */
+h1, h2, h3, .display-text {
+  font-family: var(--font-primary);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* Monospace for codes, numbers, bus numbers */
+.mono, code, .bus-number, .eta-number {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* Animations (Kept & Improved) */
 @keyframes markerBounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -26,7 +53,7 @@
 }
 
 .animate-blob {
-  animation: animate-blob 7s infinite;
+  animation: animate-blob 7s infinite ease-in-out;
 }
 
 .animation-delay-2000 { animation-delay: 2s; }
@@ -38,7 +65,7 @@
 }
 
 .animate-fade-in {
-  animation: fade-in 0.8s ease-out;
+  animation: fade-in 0.8s ease-out forwards;
 }
 
 @keyframes spin {
@@ -49,23 +76,48 @@
   animation: spin 1s linear infinite;
 }
 
+/* Card Hover Effects - Modern & Subtle */
 .card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
 }
 
 .card-hover:hover {
   transform: translateY(-8px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.12);
 }
 
 .card-hover:hover .card-bar {
   transform: scaleX(1);
 }
 
-.card-hover:hover div:first-child {
-  opacity: 0.4;
+.card-hover:hover > div:first-child {
+  opacity: 0.85;
 }
 
 .card-hover:hover div div:first-child {
-  transform: scale(1.1);
+  transform: scale(1.08);
+}
+
+/* Optional: Extra polish for titles */
+.brand-title {
+  font-family: var(--font-primary);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(90deg, #0F766E, #F97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Utility for better text hierarchy */
+.text-display {
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.045em;
+}
+
+.text-title {
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }

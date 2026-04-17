@@ -1,229 +1,351 @@
-/* ═══════════════════════════════════════════════════════════════
-   ALL STOPS PAGE — Midnight Transit
-   ═══════════════════════════════════════════════════════════════ */
+/* =============================================
+   ALL STOPS PAGE — Light Modern Passenger Style
+   Teal + Orange | Clean & Bright
+   ============================================= */
 
 .asp-page {
   max-width: 600px;
   margin: 0 auto;
   padding: 1.25rem 0.9rem 5rem;
-  display: flex; flex-direction: column; gap: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  background: #f8fafc;
+  min-height: 100vh;
 }
 
-/* ── Hero section ────────────────────────────────────────────── */
+/* ── Hero Section ────────────────────────────────────────────── */
 .asp-hero {
   text-align: center;
-  padding: 2rem 1rem 1.5rem;
+  padding: 1.8rem 1rem 1.4rem;
   position: relative;
 }
 
-/* Glow orb behind title */
+/* Soft glow behind title */
 .asp-hero::before {
   content: '';
   position: absolute;
-  top: 50%; left: 50%; transform: translate(-50%, -60%);
-  width: 240px; height: 120px;
-  background: radial-gradient(ellipse, var(--amber-glow), transparent 70%);
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -55%);
+  width: 260px; 
+  height: 130px;
+  background: radial-gradient(ellipse, rgba(16, 185, 129, 0.18), transparent 70%);
   pointer-events: none;
-  filter: blur(20px);
+  filter: blur(28px);
+  z-index: -1;
 }
 
 .asp-title {
-  font-size: clamp(2rem, 8vw, 3rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
+  font-size: clamp(2.1rem, 8vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
   line-height: 1.05;
-  margin-bottom: 0.5rem;
-  position: relative;
-  /* Gradient text */
-  background: linear-gradient(135deg, #fff 30%, var(--amber) 100%);
+  margin-bottom: 0.6rem;
+  background: linear-gradient(90deg, #0F766E, #F97316);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .asp-sub {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.55;
-  margin-bottom: 1.4rem;
-  max-width: 360px;
-  margin-inline: auto;
+  color: #64748b;
+  font-size: 0.93rem;
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 0 auto 1.5rem;
 }
-.asp-sub strong { color: var(--amber); -webkit-text-fill-color: var(--amber); }
+.asp-sub strong { 
+  color: #F97316; 
+  font-weight: 600;
+}
 
-/* Stats row */
+/* Stats Row - Light Card */
 .asp-stats-row {
   display: inline-flex;
   align-items: center;
-  gap: 0;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.06);
+  padding: 0.2rem;
 }
+
 .asp-stat {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 0.75rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.85rem 1.5rem;
 }
+
 .asp-stat-num {
-  font-size: 1.6rem; font-weight: 900; font-family: var(--mono);
-  color: var(--amber); line-height: 1;
-  text-shadow: 0 0 20px var(--amber-glow);
-  animation: countIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0F766E;
+  line-height: 1;
 }
-@keyframes countIn {
-  from { transform: translateY(10px); opacity:0; }
-  to   { transform: translateY(0); opacity:1; }
-}
-.asp-stat:last-child .asp-stat-num { animation-delay: 0.1s; }
-.asp-stat-lbl { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; margin-top: 3px; }
-.asp-stat-divider { width: 1px; height: 40px; background: var(--border); }
 
-/* ── Map ────────────────────────────────────────────────────── */
+.asp-stat-lbl {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.asp-stat-divider {
+  width: 1px;
+  height: 42px;
+  background: #e2e8f0;
+}
+
+/* ── Map Section ─────────────────────────────────────────────── */
 .asp-map-wrap {
-  border-radius: var(--radius);
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  position: relative;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  background: white;
 }
-.asp-map-topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.6rem 1rem;
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border);
-}
-.asp-map-ttl { font-size: 0.82rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.4rem; }
-.asp-map-ttl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 6px var(--amber-glow); }
 
-/* ── Search bar ─────────────────────────────────────────────── */
+.asp-map-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.asp-map-ttl {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.asp-map-ttl-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #14b8a6;
+  box-shadow: 0 0 8px rgba(20, 184, 166, 0.5);
+}
+
+/* Search Bar */
 .asp-search-wrap {
   position: relative;
-  display: flex; align-items: center;
 }
+
 .asp-search-icon {
-  position: absolute; left: 0.9rem;
-  font-size: 0.95rem; pointer-events: none;
-  opacity: 0.5;
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: #94a3b8;
+  pointer-events: none;
 }
+
 .asp-search {
   width: 100%;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 0.8rem 1rem 0.8rem 2.7rem;
-  font-family: var(--font); font-size: 0.9rem;
-  color: var(--text);
-  transition: border-color 0.2s, box-shadow 0.2s;
-  min-height: 48px;
-  -webkit-appearance: none;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0.95rem 1rem 0.95rem 3rem;
+  font-size: 0.95rem;
+  color: #1e2937;
+  transition: all 0.2s ease;
+  min-height: 52px;
 }
+
 .asp-search:focus {
-  outline: none; border-color: var(--amber);
-  box-shadow: 0 0 0 3px var(--amber-dim);
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
 }
-.asp-search::placeholder { color: var(--text-faint); }
 
-/* Result count */
+.asp-search::placeholder {
+  color: #94a3b8;
+}
+
+/* Result Count */
 .asp-result-count {
-  font-size: 0.75rem; color: var(--text-muted); font-weight: 600;
-  padding: 0 0.25rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  padding-left: 0.4rem;
 }
-.asp-result-count span { color: var(--amber); }
+.asp-result-count span {
+  color: #F97316;
+}
 
-/* ── Stop list ──────────────────────────────────────────────── */
-.asp-stop-list { display: flex; flex-direction: column; gap: 0.5rem; }
+/* Stop List */
+.asp-stop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
 
 .asp-stop-card {
-  display: flex; align-items: center;
-  gap: 0; text-decoration: none; color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  text-decoration: none;
+  color: inherit;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
   overflow: hidden;
-  transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
-  animation: cardIn 0.4s ease both;
+  transition: all 0.22s ease;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
-@keyframes cardIn {
-  from { opacity:0; transform:translateY(8px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-.asp-stop-card:nth-child(1) { animation-delay:0.02s; }
-.asp-stop-card:nth-child(2) { animation-delay:0.05s; }
-.asp-stop-card:nth-child(3) { animation-delay:0.08s; }
-.asp-stop-card:nth-child(4) { animation-delay:0.11s; }
-.asp-stop-card:nth-child(5) { animation-delay:0.14s; }
 
 .asp-stop-card:hover {
-  border-color: var(--border-lit);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px var(--border-lit);
+  border-color: #14b8a6;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(20, 184, 166, 0.12);
 }
-.asp-stop-card:active { transform: translateY(0) scale(0.99); }
 
-/* Left accent stripe — colour coded by route */
 .asp-stop-stripe {
-  width: 4px; align-self: stretch; flex-shrink: 0;
-  background: var(--amber);
+  width: 5px;
+  align-self: stretch;
+  flex-shrink: 0;
+  background: #14b8a6;
 }
-.asp-stop-stripe.s0 { background: var(--amber); }
-.asp-stop-stripe.s1 { background: var(--neon); }
-.asp-stop-stripe.s2 { background: var(--green); }
-.asp-stop-stripe.s3 { background: #b280ff; }
 
-/* Icon column */
+.asp-stop-stripe.s1 { background: #F97316; }
+.asp-stop-stripe.s2 { background: #0ea5e9; }
+.asp-stop-stripe.s3 { background: #8b5cf6; }
+
+/* Icon */
 .asp-stop-icon-col {
-  width: 52px; display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; padding: 0.9rem 0;
+  width: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
 }
+
 .asp-stop-icon-badge {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: var(--surface3);
-  border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem;
-  transition: transform 0.18s;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  transition: transform 0.25s ease;
 }
-.asp-stop-card:hover .asp-stop-icon-badge { transform: scale(1.1) rotate(-5deg); }
+
+.asp-stop-card:hover .asp-stop-icon-badge {
+  transform: scale(1.12) rotate(-6deg);
+}
 
 /* Content */
-.asp-stop-body { flex: 1; min-width: 0; padding: 0.85rem 0.75rem 0.85rem 0; }
-.asp-stop-name { font-weight: 700; font-size: 0.92rem; color: var(--text); margin-bottom: 0.25rem; }
-.asp-stop-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.35rem; }
+.asp-stop-body {
+  flex: 1;
+  padding: 0.95rem 0.8rem 0.95rem 0.4rem;
+  min-width: 0;
+}
+
+.asp-stop-name {
+  font-weight: 700;
+  font-size: 0.96rem;
+  color: #1e2937;
+  margin-bottom: 0.3rem;
+}
+
+.asp-stop-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
 .asp-stop-code {
-  font-family: var(--mono); font-size: 0.65rem; font-weight: 700;
-  background: var(--amber-dim); color: var(--amber);
-  border: 1px solid rgba(255,159,10,0.15);
-  padding: 0.1rem 0.4rem; border-radius: 5px; letter-spacing: 0.04em;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(20, 184, 166, 0.1);
+  color: #0F766E;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(20, 184, 166, 0.2);
 }
-.asp-stop-addr { font-size: 0.74rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
-.asp-route-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+
+.asp-stop-addr {
+  font-size: 0.78rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.asp-route-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .asp-route-chip {
-  font-size: 0.66rem; font-weight: 700;
-  background: var(--surface3); color: var(--text-muted);
-  border: 1px solid var(--border); padding: 0.1rem 0.45rem; border-radius: 5px;
-  transition: all 0.15s;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 0.12rem 0.5rem;
+  border-radius: 6px;
 }
-.asp-stop-card:hover .asp-route-chip { color: var(--neon); border-color: rgba(0,229,255,0.2); background: var(--neon-dim); }
+
+.asp-stop-card:hover .asp-route-chip {
+  color: #F97316;
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
 
 /* Arrow */
 .asp-arrow-col {
-  padding: 0 0.9rem; color: var(--text-faint); font-size: 1rem;
-  transition: color 0.18s, transform 0.18s;
+  padding: 0 1rem;
+  color: #94a3b8;
+  font-size: 1.35rem;
+  transition: all 0.2s ease;
 }
-.asp-stop-card:hover .asp-arrow-col { color: var(--amber); transform: translateX(3px); }
 
-/* Empty / loading */
-.asp-loading, .asp-empty {
-  display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
-  padding: 3.5rem 1rem; color: var(--text-muted); text-align: center;
+.asp-stop-card:hover .asp-arrow-col {
+  color: #F97316;
+  transform: translateX(5px);
 }
-.asp-empty-icon { font-size: 2.5rem; }
-.asp-empty p    { font-size: 0.85rem; }
+
+/* Empty & Loading */
+.asp-loading, .asp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.asp-empty-icon {
+  font-size: 3.2rem;
+  opacity: 0.7;
+}
 
 /* Footer */
 .asp-footer {
-  text-align: center; color: var(--text-faint); font-size: 0.75rem;
-  line-height: 1.9; padding-top: 0.5rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  padding-top: 1rem;
+  margin-top: auto;
 }

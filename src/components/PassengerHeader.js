@@ -6,12 +6,19 @@ export default function PassengerHeader() {
   return (
     <header className="ph-header">
       <Link to="/" className="ph-brand">
-        <div className="ph-brand-icon-wrap">🚌</div>
+        {/* Logo Image instead of bus emoji */}
+        <img 
+          src="/logo.png"           // ← Change this to your actual logo path
+          alt="SalemOne Logo" 
+          className="ph-logo"
+        />
+
         <div className="ph-brand-text">
           <span className="ph-brand-name">SalemOne</span>
           <span className="ph-brand-sub">Passenger</span>
         </div>
       </Link>
+
       <div className="ph-right">
         <div className="ph-signal">
           <span/><span/><span/><span/>
