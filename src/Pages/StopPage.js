@@ -34,7 +34,6 @@ const MAP_STYLES = [
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: '© Esri, Maxar, Earthstar Geographics',
     filter: 'none',
-    // Labels overlay on top of satellite
     extraLayer: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
   },
   {
@@ -48,7 +47,6 @@ const MAP_STYLES = [
   },
 ];
 
-/* ─── TileLayerSwitcher: swaps tile layer without remounting map ─── */
 function TileLayerSwitcher({ style }) {
   return (
     <>
@@ -60,14 +58,12 @@ function TileLayerSwitcher({ style }) {
   );
 }
 
-/* ─── MapStyleSwitcher UI control ──────────────────────────────── */
 function MapStyleSwitcher({ current, onChange }) {
   const [open, setOpen] = useState(false);
   const currentStyle = MAP_STYLES.find(s => s.id === current) || MAP_STYLES[0];
 
   return (
     <div className="map-style-switcher" style={{ position: 'absolute', top: 10, right: 10, zIndex: 900 }}>
-      {/* Collapsed button */}
       <button
         className="map-style-btn"
         onClick={() => setOpen(o => !o)}
@@ -78,19 +74,17 @@ function MapStyleSwitcher({ current, onChange }) {
           border: '1px solid rgba(255,159,10,.35)', borderRadius: '10px',
           padding: '.38rem .7rem', cursor: 'pointer', color: '#fff',
           fontSize: '.7rem', fontWeight: 700, fontFamily: 'var(--mono)',
-          boxShadow: '0 4px 16px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04)',
-          transition: 'all .18s', whiteSpace: 'nowrap',
-          letterSpacing: '.03em',
+          boxShadow: '0 4px 16px rgba(0,0,0,.5)',
+          transition: 'all .18s', whiteSpace: 'nowrap', letterSpacing: '.03em',
         }}
       >
         <span style={{ fontSize: '.85rem' }}>{currentStyle.icon}</span>
-        <span style={{ color: 'var(--amber)' }}>{currentStyle.label}</span>
+        <span style={{ color: '#ff9f0a' }}>{currentStyle.label}</span>
         <span style={{ color: 'rgba(255,255,255,.35)', fontSize: '.65rem', marginLeft: '2px' }}>
           {open ? '▲' : '▼'}
         </span>
       </button>
 
-      {/* Expanded style grid */}
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 6px)', right: 0,
@@ -99,26 +93,19 @@ function MapStyleSwitcher({ current, onChange }) {
           padding: '.45rem',
           display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '.3rem',
           minWidth: '130px',
-          boxShadow: '0 8px 32px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04)',
-          animation: 'styleDropIn .2s cubic-bezier(0.34,1.26,0.64,1) both',
+          boxShadow: '0 8px 32px rgba(0,0,0,.7)',
         }}>
           {MAP_STYLES.map(style => (
             <button
               key={style.id}
               onClick={() => { onChange(style.id); setOpen(false); }}
-              title={style.label}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.2rem',
                 padding: '.45rem .3rem', borderRadius: '8px', cursor: 'pointer',
-                border: current === style.id
-                  ? '1.5px solid rgba(255,159,10,.6)'
-                  : '1.5px solid rgba(255,255,255,.06)',
-                background: current === style.id
-                  ? 'rgba(255,159,10,.12)'
-                  : 'rgba(255,255,255,.03)',
-                color: current === style.id ? 'var(--amber)' : 'rgba(255,255,255,.55)',
+                border: current === style.id ? '1.5px solid rgba(255,159,10,.6)' : '1.5px solid rgba(255,255,255,.06)',
+                background: current === style.id ? 'rgba(255,159,10,.12)' : 'rgba(255,255,255,.03)',
+                color: current === style.id ? '#ff9f0a' : 'rgba(255,255,255,.55)',
                 fontSize: '.62rem', fontWeight: 700, fontFamily: 'var(--mono)',
-                letterSpacing: '.03em',
                 transition: 'all .15s',
               }}
             >
@@ -133,86 +120,114 @@ function MapStyleSwitcher({ current, onChange }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   CUSTOM MAP ICONS — pure CSS/SVG, no external images
+   DIRECTION HELPERS
    ═══════════════════════════════════════════════════════════════════ */
 
-// 🚌 MAIN BUS — Floating 3D-style capsule with exhaust trail + number plate
-const makeBusIcon = (busNumber, speed, urgency) => {
-  const color = urgency === 'red' ? '#ff4d6a' : urgency === 'amber' ? '#ffd60a' : '#00d68f';
-  const shadow = urgency === 'red' ? 'rgba(255,77,106,0.5)' : urgency === 'amber' ? 'rgba(255,214,10,0.4)' : 'rgba(0,214,143,0.4)';
+/** Compass bearing (0–360°) from [lat,lng] point A to point B */
+function bearing(from, to) {
+  if (!from || !to) return 0;
+  const toRad = d => (d * Math.PI) / 180;
+  const toDeg = r => (r * 180) / Math.PI;
+  const dLng  = toRad(to[1] - from[1]);
+  const lat1  = toRad(from[0]);
+  const lat2  = toRad(to[0]);
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+/**
+ * Given the bus position and the road-snapped ahead polyline,
+ * find the closest segment and return the bearing of that segment.
+ * This makes the icon face the actual road direction.
+ */
+function getDirectionBearing(busLL, aheadLine) {
+  if (!busLL || !aheadLine || aheadLine.length < 2) return 0;
+  let minDist = Infinity;
+  let closestIdx = 0;
+  for (let i = 0; i < aheadLine.length; i++) {
+    const d = Math.hypot(aheadLine[i][0] - busLL[0], aheadLine[i][1] - busLL[1]);
+    if (d < minDist) { minDist = d; closestIdx = i; }
+  }
+  const nextIdx = Math.min(closestIdx + 1, aheadLine.length - 1);
+  if (nextIdx === closestIdx) return 0;
+  return bearing(aheadLine[closestIdx], aheadLine[nextIdx]);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BUS ICON — Compact top-view vehicle pill, Rapido / Google Maps style
+   ─────────────────────────────────────────────────────────────────
+   • Small 48×56 px footprint
+   • Top-down bus silhouette drawn in SVG
+   • Directional chevron at the front (top of pill)
+   • Entire icon rotated to face direction of travel
+   • Route number label counter-rotated to stay readable
+   • Soft drop shadow — no glow animations
+   ═══════════════════════════════════════════════════════════════════ */
+const makeBusIcon = (busNumber, headingDeg = 0, urgency = 'green') => {
+  const color = urgency === 'red'   ? '#ef4444'
+              : urgency === 'amber' ? '#f59e0b'
+              :                       '#10b981';
+
+  const label = String(busNumber).length > 5
+    ? String(busNumber).slice(0, 4) + '…'
+    : String(busNumber);
+
   return L.divIcon({
     className: '',
-    iconSize:  [72, 64],
-    iconAnchor:[36, 58],
+    iconSize:   [30, 42],
+    iconAnchor: [15, 21],
     html: `
-      <style>
-        .bic${busNumber}{position:relative;width:72px;height:64px;display:flex;flex-direction:column;align-items:center;}
-        .bic${busNumber} .exhaust{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:1;}
-        .bic${busNumber} .ex{width:4px;height:4px;border-radius:50%;background:rgba(${urgency==='red'?'255,77,106':'0,214,143'},.6);
-          animation:exFloat 1.2s ease-out infinite;}
-        .bic${busNumber} .ex:nth-child(2){animation-delay:.3s;width:3px;height:3px;}
-        .bic${busNumber} .ex:nth-child(3){animation-delay:.6s;width:2px;height:2px;}
-        @keyframes exFloat{0%{transform:translateY(0) scale(1);opacity:.7;}100%{transform:translateY(-16px) scale(0);opacity:0;}}
-        .bic${busNumber} .body{
-          width:62px;height:42px;
-          background:linear-gradient(160deg,#0f2040,#081528);
-          border:2px solid ${color};
-          border-radius:12px 12px 8px 8px;
-          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
-          position:relative;z-index:3;
-          box-shadow:0 0 0 1px rgba(255,255,255,0.06), 0 6px 24px rgba(0,0,0,.7), 0 0 20px ${shadow};
-          animation:busFloat 2s ease-in-out infinite alternate;
-          overflow:hidden;
-        }
-        @keyframes busFloat{from{transform:translateY(0);}to{transform:translateY(-4px);}}
-        .bic${busNumber} .body::after{
-          content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
-          background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);
-          animation:busShine 3.5s ease-in-out infinite;
-        }
-        @keyframes busShine{0%,100%{left:-100%;}50%{left:120%;}}
-        .bic${busNumber} .windows{display:flex;gap:3px;}
-        .bic${busNumber} .win{width:8px;height:6px;border-radius:2px;background:rgba(0,229,255,.3);border:1px solid rgba(0,229,255,.4);}
-        .bic${busNumber} .win.lit{background:rgba(255,214,10,.4);border-color:rgba(255,214,10,.5);animation:winBlink 2.4s ease infinite;}
-        @keyframes winBlink{0%,100%{opacity:1;}50%{opacity:.5;}}
-        .bic${busNumber} .plate{
-          font-family:'Space Mono',monospace;font-size:.6rem;font-weight:700;
-          color:${color};letter-spacing:.05em;
-          text-shadow:0 0 8px ${shadow};
-        }
-        .bic${busNumber} .gnd{
-          width:44px;height:7px;
-          background:radial-gradient(${shadow},transparent 70%);
-          border-radius:50%;margin-top:-4px;
-          animation:gndPulse 2s ease-in-out infinite alternate;
-          position:relative;z-index:2;
-        }
-        @keyframes gndPulse{from{transform:scaleX(.8);opacity:.6;}to{transform:scaleX(1.1);opacity:1;}}
-        .bic${busNumber} .sring{
-          position:absolute;top:-6px;left:50%;transform:translateX(-50%);
-          width:70px;height:70px;border-radius:50%;z-index:0;
-          border:1.5px solid ${color};opacity:.35;
-          animation:sringPulse 2s ease-out infinite;
-        }
-        @keyframes sringPulse{0%{transform:translateX(-50%) scale(.5);opacity:.6;}100%{transform:translateX(-50%) scale(1.4);opacity:0;}}
-      </style>
-      <div class="bic${busNumber}">
-        <div class="sring"></div>
-        <div class="exhaust"><div class="ex"></div><div class="ex"></div><div class="ex"></div></div>
-        <div class="body">
-          <div class="windows">
-            <div class="win lit"></div><div class="win"></div><div class="win lit"></div>
-            <div class="win"></div><div class="win lit"></div>
-          </div>
-          <div class="plate">${busNumber}</div>
-        </div>
-        <div class="gnd"></div>
+      <div style="
+        width:30px; height:42px;
+        display:flex; flex-direction:column; align-items:center;
+        transform:rotate(${headingDeg}deg);
+        transform-origin:15px 21px;
+        pointer-events:auto;
+      ">
+        <!-- Direction tip -->
+        <svg width="8" height="6" viewBox="0 0 8 6" style="display:block;margin-bottom:-1px;flex-shrink:0;">
+          <path d="M4 0 L8 6 H0 Z" fill="${color}"/>
+        </svg>
+
+        <!-- Bus body -->
+        <svg width="30" height="28" viewBox="0 0 30 28" fill="none" style="display:block;flex-shrink:0;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));">
+          <!-- Body -->
+          <rect x="7" y="0" width="16" height="24" rx="4" fill="${color}"/>
+          <!-- Windshield -->
+          <rect x="9" y="2" width="12" height="5" rx="1.5" fill="white" opacity="0.8"/>
+          <!-- Two side windows -->
+          <rect x="9"  y="10" width="5" height="4" rx="1" fill="white" opacity="0.6"/>
+          <rect x="16" y="10" width="5" height="4" rx="1" fill="white" opacity="0.6"/>
+          <!-- Front wheels -->
+          <rect x="3"  y="2"  width="4" height="5" rx="2" fill="#111"/>
+          <rect x="23" y="2"  width="4" height="5" rx="2" fill="#111"/>
+          <!-- Rear wheels -->
+          <rect x="3"  y="13" width="4" height="5" rx="2" fill="#111"/>
+          <rect x="23" y="13" width="4" height="5" rx="2" fill="#111"/>
+        </svg>
+
+        <!-- Route label — counter-rotated to stay upright -->
+        <div style="
+          transform:rotate(${-headingDeg}deg);
+          transform-origin:center top;
+          margin-top:2px;
+          background:${color};
+          color:white;
+          font-size:7px;
+          font-weight:800;
+          font-family:ui-monospace,monospace;
+          padding:1px 4px;
+          border-radius:3px;
+          white-space:nowrap;
+          line-height:1.5;
+          pointer-events:none;
+        ">${label}</div>
       </div>
-    `
+    `,
   });
 };
-
-// 🚏 SCANNED STOP — Diamond tower with sonar rings
+/* ─── Stop icon ────────────────────────────────────────────────── */
 const makeMyStopIcon = () => L.divIcon({
   className: '',
   iconSize:  [48, 62],
@@ -220,41 +235,18 @@ const makeMyStopIcon = () => L.divIcon({
   html: `
     <style>
       .myst-wrap{position:relative;width:48px;height:62px;display:flex;flex-direction:column;align-items:center;}
-      .myst-r1,.myst-r2,.myst-r3{
-        position:absolute;border-radius:50%;
-        border:1.5px solid rgba(255,159,10,.6);
-        animation:mystRing 3s ease-out infinite;
-      }
+      .myst-r1,.myst-r2,.myst-r3{position:absolute;border-radius:50%;border:1.5px solid rgba(255,159,10,.6);animation:mystRing 3s ease-out infinite;}
       .myst-r1{width:40px;height:40px;top:2px;left:50%;transform:translateX(-50%);}
       .myst-r2{width:40px;height:40px;top:2px;left:50%;transform:translateX(-50%);animation-delay:1s;}
       .myst-r3{width:40px;height:40px;top:2px;left:50%;transform:translateX(-50%);animation-delay:2s;}
       @keyframes mystRing{0%{transform:translateX(-50%) scale(.4);opacity:.9;}100%{transform:translateX(-50%) scale(2.4);opacity:0;}}
-      .myst-diamond{
-        width:28px;height:28px;
-        background:linear-gradient(135deg,#ff9f0a,#ff5500);
-        border:3px solid rgba(255,255,255,.9);
-        border-radius:4px 50% 4px 50%;
-        transform:rotate(45deg);
-        position:relative;z-index:4;
-        box-shadow:0 6px 20px rgba(255,159,10,.65), 0 2px 8px rgba(0,0,0,.5);
-        margin-top:6px;
-        animation:diamondPop .3s cubic-bezier(0.34,1.56,0.64,1) both;
-      }
-      @keyframes diamondPop{from{transform:rotate(45deg) scale(0);}to{transform:rotate(45deg) scale(1);}}
-      .myst-diamond::after{
-        content:'';position:absolute;
-        top:4px;left:4px;
-        width:8px;height:8px;
-        background:rgba(255,255,255,.4);
-        border-radius:50%;
-      }
+      .myst-diamond{width:28px;height:28px;background:linear-gradient(135deg,#ff9f0a,#ff5500);border:3px solid rgba(255,255,255,.9);border-radius:4px 50% 4px 50%;transform:rotate(45deg);position:relative;z-index:4;box-shadow:0 6px 20px rgba(255,159,10,.65);margin-top:6px;}
+      .myst-diamond::after{content:'';position:absolute;top:4px;left:4px;width:8px;height:8px;background:rgba(255,255,255,.4);border-radius:50%;}
       .myst-stem{width:3px;height:20px;background:linear-gradient(to bottom,#ff9f0a,transparent);margin-top:-2px;border-radius:1px;position:relative;z-index:3;}
       .myst-dot{width:5px;height:5px;border-radius:50%;background:#ff9f0a;box-shadow:0 0 6px rgba(255,159,10,.8);position:relative;z-index:3;}
     </style>
     <div class="myst-wrap">
-      <div class="myst-r1"></div>
-      <div class="myst-r2"></div>
-      <div class="myst-r3"></div>
+      <div class="myst-r1"></div><div class="myst-r2"></div><div class="myst-r3"></div>
       <div class="myst-diamond"></div>
       <div class="myst-stem"></div>
       <div class="myst-dot"></div>
@@ -262,7 +254,7 @@ const makeMyStopIcon = () => L.divIcon({
   `
 });
 
-// 📍 PASSENGER — Teal sonar beacon with "YOU" label
+/* ─── Passenger icon ─────────────────────────────────────────────── */
 const makePassengerIcon = () => L.divIcon({
   className: '',
   iconSize:  [56, 60],
@@ -270,44 +262,21 @@ const makePassengerIcon = () => L.divIcon({
   html: `
     <style>
       .pax-wrap{position:relative;width:56px;height:60px;display:flex;flex-direction:column;align-items:center;}
-      .pax-s1,.pax-s2{
-        position:absolute;width:44px;height:44px;
-        border-radius:50%;border:2px solid rgba(0,229,255,.5);
-        top:0;left:50%;
-        animation:paxSonar 2.2s ease-out infinite;
-      }
+      .pax-s1,.pax-s2{position:absolute;width:44px;height:44px;border-radius:50%;border:2px solid rgba(0,229,255,.5);top:0;left:50%;animation:paxSonar 2.2s ease-out infinite;}
       .pax-s2{animation-delay:1.1s;}
       @keyframes paxSonar{0%{transform:translateX(-50%) scale(.4);opacity:.9;}100%{transform:translateX(-50%) scale(2.2);opacity:0;}}
-      .pax-core{
-        width:26px;height:26px;border-radius:50%;
-        background:radial-gradient(circle at 35% 35%,#4df0ff,#00b8cc);
-        border:3px solid rgba(255,255,255,.9);
-        box-shadow:0 0 0 4px rgba(0,229,255,.2), 0 4px 16px rgba(0,229,255,.5);
-        position:relative;z-index:4;margin-top:9px;
-        animation:paxBreath 2s ease-in-out infinite alternate;
-      }
-      @keyframes paxBreath{from{box-shadow:0 0 0 4px rgba(0,229,255,.2),0 4px 16px rgba(0,229,255,.4);}to{box-shadow:0 0 0 8px rgba(0,229,255,.1),0 4px 24px rgba(0,229,255,.6);}}
-      .pax-you{
-        margin-top:3px;
-        background:#00e5ff;color:#001a1f;
-        font-family:'Space Mono',monospace;font-size:.55rem;font-weight:700;
-        padding:.1rem .35rem;border-radius:4px;
-        letter-spacing:.06em;
-        box-shadow:0 2px 8px rgba(0,229,255,.4);
-        position:relative;z-index:4;
-        white-space:nowrap;
-      }
+      .pax-core{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4df0ff,#00b8cc);border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 4px rgba(0,229,255,.2),0 4px 16px rgba(0,229,255,.5);position:relative;z-index:4;margin-top:9px;}
+      .pax-you{margin-top:3px;background:#00e5ff;color:#001a1f;font-family:'Space Mono',monospace;font-size:.55rem;font-weight:700;padding:.1rem .35rem;border-radius:4px;letter-spacing:.06em;white-space:nowrap;}
     </style>
     <div class="pax-wrap">
-      <div class="pax-s1"></div>
-      <div class="pax-s2"></div>
+      <div class="pax-s1"></div><div class="pax-s2"></div>
       <div class="pax-core"></div>
       <div class="pax-you">YOU</div>
     </div>
   `
 });
 
-// Regular stop dot (upcoming)
+/* ─── Stop dots ──────────────────────────────────────────────────── */
 const dotUpcoming = L.divIcon({
   className: '',
   iconSize: [14, 14],
@@ -315,7 +284,6 @@ const dotUpcoming = L.divIcon({
   html: `<div style="width:14px;height:14px;border-radius:50%;background:#1a3a6e;border:2.5px solid rgba(255,159,10,.6);box-shadow:0 0 6px rgba(255,159,10,.25);"></div>`
 });
 
-// Regular stop dot (passed)
 const dotPassed = L.divIcon({
   className: '',
   iconSize: [8, 8],
@@ -342,27 +310,56 @@ function haversine(lat1, lng1, lat2, lng2) {
   return +(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   OSRM road-snapping
+   ═══════════════════════════════════════════════════════════════════ */
+async function snapToRoads(waypoints) {
+  if (!waypoints || waypoints.length < 2) return waypoints.map(p => [p.lat, p.lng]);
+  const coords = waypoints.map(p => `${p.lng},${p.lat}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+  try {
+    const res  = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const json = await res.json();
+    if (json.code !== 'Ok' || !json.routes?.[0]) throw new Error('OSRM bad response');
+    return json.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+  } catch (err) {
+    console.warn('[OSRM] road-snap failed, falling back:', err.message);
+    return waypoints.map(p => [p.lat, p.lng]);
+  }
+}
+
+async function buildSnappedSegments(poly) {
+  const passedPts = poly.filter(p => p.isPassed || p.isScannedStop);
+  const aheadPts  = poly.filter(p => !p.isPassed || p.isScannedStop);
+  const [snappedPassed, snappedAhead] = await Promise.all([
+    passedPts.length >= 2 ? snapToRoads(passedPts) : Promise.resolve(passedPts.map(p => [p.lat, p.lng])),
+    aheadPts.length  >= 2 ? snapToRoads(aheadPts)  : Promise.resolve(aheadPts.map(p => [p.lat, p.lng])),
+  ]);
+  return { snappedPassed, snappedAhead };
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+
 const REFRESH = 10;
 const LOC = { IDLE:'idle', ASKING:'asking', GRANTED:'granted', DENIED:'denied', UNSUPPORTED:'unsupported' };
 
-/* ═══════════════════════════════════════════════════════════════════
-   STOP PAGE COMPONENT
-   ═══════════════════════════════════════════════════════════════════ */
 export default function StopPage() {
   const { stopId } = useParams();
-  const [data,         setData]         = useState(null);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState('');
-  const [countdown,    setCountdown]    = useState(REFRESH);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastRefresh,  setLastRefresh]  = useState(null);
-  const [activeBus,    setActiveBus]    = useState(0);
-  const [locState,     setLocState]     = useState(LOC.IDLE);
-  const [myPos,        setMyPos]        = useState(null);
-  const [mapStyleId,   setMapStyleId]   = useState('dark');  // ← NEW
-  const watchRef = useRef(null);
-  const timerRef = useRef(null);
-  const countRef = useRef(null);
+  const [data,           setData]           = useState(null);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState('');
+  const [countdown,      setCountdown]      = useState(REFRESH);
+  const [isRefreshing,   setIsRefreshing]   = useState(false);
+  const [lastRefresh,    setLastRefresh]    = useState(null);
+  const [activeBus,      setActiveBus]      = useState(0);
+  const [locState,       setLocState]       = useState(LOC.IDLE);
+  const [myPos,          setMyPos]          = useState(null);
+  const [mapStyleId,     setMapStyleId]     = useState('dark');
+  const [snappedRoutes,  setSnappedRoutes]  = useState({});
+  const snappingRef = useRef({});
+  const watchRef    = useRef(null);
+  const timerRef    = useRef(null);
+  const countRef    = useRef(null);
 
   /* ── Fetch ── */
   const fetchData = useCallback(async (spinner = false, coords = null) => {
@@ -374,6 +371,8 @@ export default function StopPage() {
       setLastRefresh(new Date());
       setCountdown(REFRESH);
       setError('');
+      setSnappedRoutes({});
+      snappingRef.current = {};
     } catch { setError('Could not reach server.'); }
     finally  { setLoading(false); setIsRefreshing(false); }
   }, [stopId, myPos]);
@@ -386,6 +385,19 @@ export default function StopPage() {
   }, [fetchData]);
 
   useEffect(() => { if (myPos) fetchData(false, myPos); }, [myPos]); // eslint-disable-line
+
+  /* ── Road-snap ── */
+  useEffect(() => {
+    if (!data?.buses?.length) return;
+    const bus  = data.buses[activeBus] ?? data.buses[0];
+    const poly = bus?.routePolyline ?? [];
+    if (poly.length < 2) return;
+    if (snappedRoutes[activeBus] || snappingRef.current[activeBus]) return;
+    snappingRef.current[activeBus] = true;
+    buildSnappedSegments(poly).then(result => {
+      setSnappedRoutes(prev => ({ ...prev, [activeBus]: result }));
+    });
+  }, [data, activeBus]); // eslint-disable-line
 
   /* ── Geolocation ── */
   const requestLocation = useCallback(() => {
@@ -417,10 +429,8 @@ export default function StopPage() {
   const fmtLong = m => m === 0 ? 'Arriving now' : `${m} min${m !== 1 ? 's' : ''} away`;
   const etaPct  = m => Math.max(5, Math.min(100, 100 - (m / 30) * 100));
 
-  // Resolve active style object
   const activeStyle = MAP_STYLES.find(s => s.id === mapStyleId) || MAP_STYLES[0];
 
-  /* ── Loading ── */
   if (loading) return (
     <div className="sp-screen">
       <div className="sp-loader-bus">
@@ -442,20 +452,26 @@ export default function StopPage() {
   );
 
   const { stop, buses, passenger: psgr } = data || {};
-  const bus     = buses?.[activeBus] ?? buses?.[0];
-  const poly    = bus?.routePolyline ?? [];
-  const myLL    = myPos ? [myPos.lat, myPos.lng] : null;
-  const busLL   = bus?.currentLocation?.coordinates?.length === 2
+  const bus      = buses?.[activeBus] ?? buses?.[0];
+  const poly     = bus?.routePolyline ?? [];
+  const myLL     = myPos ? [myPos.lat, myPos.lng] : null;
+  const busLL    = bus?.currentLocation?.coordinates?.length === 2
     ? [bus.currentLocation.coordinates[1], bus.currentLocation.coordinates[0]] : null;
   const myStopPt = poly.find(p => p.isScannedStop);
   const stopLL   = myStopPt ? [myStopPt.lat, myStopPt.lng] : null;
-  const passedLL = poly.filter(p =>  p.isPassed).map(p => [p.lat, p.lng]);
-  const aheadLL  = poly.filter(p => !p.isPassed).map(p => [p.lat, p.lng]);
-  const fitPoints = [...poly.map(p => [p.lat, p.lng]), ...(busLL ? [busLL] : []), ...(myLL ? [myLL] : [])];
-  const mapCenter = myLL ?? stopLL ?? fitPoints[0] ?? [13.0827, 80.2707];
-  const walkLine  = myLL && stopLL ? [myLL, stopLL] : null;
+
+  const snapped   = snappedRoutes[activeBus];
+  const passedLL  = snapped?.snappedPassed ?? poly.filter(p =>  p.isPassed).map(p => [p.lat, p.lng]);
+  const aheadLL   = snapped?.snappedAhead  ?? poly.filter(p => !p.isPassed).map(p => [p.lat, p.lng]);
+
+  /* ── Bus heading: face the direction of the next road segment ── */
+  const busHeading = getDirectionBearing(busLL, aheadLL.length >= 2 ? aheadLL : null);
+
+  const fitPoints     = [...poly.map(p => [p.lat, p.lng]), ...(busLL ? [busLL] : []), ...(myLL ? [myLL] : [])];
+  const mapCenter     = myLL ?? stopLL ?? fitPoints[0] ?? [13.0827, 80.2707];
+  const walkLine      = myLL && stopLL ? [myLL, stopLL] : null;
   const liveDistToBus = myPos && busLL ? haversine(myPos.lat, myPos.lng, busLL[0], busLL[1]) : null;
-  const u = bus ? urgency(bus.etaMinutes) : 'green';
+  const u             = bus ? urgency(bus.etaMinutes) : 'green';
 
   return (
     <div className="sp-page">
@@ -463,9 +479,7 @@ export default function StopPage() {
       {/* ═══ HEADER ════════════════════════════════════════════ */}
       <header className="sp-header">
         <div className="sp-hdr-left">
-          <div className="sp-stop-badge">
-            <span className="sp-stop-badge-icon">🚏</span>
-          </div>
+          <div className="sp-stop-badge"><span className="sp-stop-badge-icon">🚏</span></div>
           <div>
             <h1 className="sp-stop-name">{stop?.name}</h1>
             <div className="sp-stop-meta">
@@ -481,7 +495,8 @@ export default function StopPage() {
               <circle cx="18" cy="18" r="15" fill="none" stroke="var(--amber)" strokeWidth="2.5"
                 strokeDasharray="94.2"
                 strokeDashoffset={94.2 - (countdown / REFRESH) * 94.2}
-                strokeLinecap="round" transform="rotate(-90 18 18)" style={{transition:'stroke-dashoffset 1s linear'}}/>
+                strokeLinecap="round" transform="rotate(-90 18 18)"
+                style={{transition:'stroke-dashoffset 1s linear'}}/>
             </svg>
             <span className="sp-cdown-num">{countdown}</span>
           </div>
@@ -501,16 +516,10 @@ export default function StopPage() {
         </div>
       )}
       {locState === LOC.ASKING && (
-        <div className="sp-loc-status asking">
-          <div className="spinner" />
-          <span>Requesting location…</span>
-        </div>
+        <div className="sp-loc-status asking"><div className="spinner"/><span>Requesting location…</span></div>
       )}
       {locState === LOC.DENIED && (
-        <div className="sp-loc-status denied">
-          <span>🚫</span>
-          <span>Location denied — enable in browser settings for personalised ETAs</span>
-        </div>
+        <div className="sp-loc-status denied"><span>🚫</span><span>Location denied — enable in browser settings</span></div>
       )}
       {locState === LOC.GRANTED && myPos && (
         <div className="sp-loc-active">
@@ -541,6 +550,11 @@ export default function StopPage() {
             <span className="sp-map-ttl">
               <span className="sp-map-dot" />
               Live Map
+              {!snapped && poly.length >= 2 && (
+                <span style={{ fontSize:'.65rem', color:'rgba(255,159,10,.6)', marginLeft:'6px' }}>
+                  ⟳ snapping route…
+                </span>
+              )}
             </span>
             {bus && <span className="sp-map-chip">🚌 {bus.busNumber} · Rte {bus.routeNumber}</span>}
           </div>
@@ -551,16 +565,9 @@ export default function StopPage() {
                 style={{ width:'100%', height:'100%' }}
                 scrollWheelZoom={false} zoomControl={true}>
 
-                {/* ── Tile layer (swappable) ── */}
                 <TileLayerSwitcher style={activeStyle} />
-
-                {/* ── CSS filter for dark mode ── */}
                 <style>{`
                   .leaflet-tile-pane { filter: ${activeStyle.filter}; transition: filter .4s ease; }
-                  @keyframes styleDropIn {
-                    from { opacity: 0; transform: translateY(-6px) scale(.97); }
-                    to   { opacity: 1; transform: translateY(0) scale(1); }
-                  }
                 `}</style>
 
                 {fitPoints.length > 1 && <AutoFit points={fitPoints} />}
@@ -568,29 +575,34 @@ export default function StopPage() {
                 {/* Passed route */}
                 {passedLL.length > 1 && (
                   <Polyline positions={passedLL}
-                    pathOptions={{ color:'rgba(255,255,255,.15)', weight:3, dashArray:'5 8' }} />
+                    pathOptions={{ color:'rgba(255,255,255,.15)', weight:4, dashArray:'6 8', lineCap:'round' }} />
                 )}
-                {/* Active route */}
+
+                {/* Ahead route — outline + fill for a road-like look */}
                 {aheadLL.length > 1 && (
-                  <Polyline positions={aheadLL}
-                    pathOptions={{ color:'#ff9f0a', weight:4.5, opacity:.85 }} />
+                  <>
+                    <Polyline positions={aheadLL}
+                      pathOptions={{ color:'rgba(0,0,0,0.2)', weight:8, lineCap:'round', lineJoin:'round' }} />
+                    <Polyline positions={aheadLL}
+                      pathOptions={{ color:'#ff9f0a', weight:5.5, opacity:1, lineCap:'round', lineJoin:'round' }} />
+                  </>
                 )}
+
                 {/* Walk line */}
                 {walkLine && (
                   <Polyline positions={walkLine}
                     pathOptions={{ color:'#00e5ff', weight:2.5, dashArray:'8 6', opacity:.8 }} />
                 )}
 
-                {/* Stop dots */}
+                {/* Stop markers */}
                 {poly.map((pt, i) =>
                   pt.isScannedStop ? (
                     <React.Fragment key={i}>
                       <Circle center={[pt.lat, pt.lng]} radius={90}
-                        pathOptions={{ color:'#ff9f0a', fillColor:'rgba(255,159,10,.15)', fillOpacity:1, weight:2 }} />
+                        pathOptions={{ color:'#ff9f0a', fillColor:'rgba(255,159,10,.12)', fillOpacity:1, weight:2 }} />
                       <Marker position={[pt.lat, pt.lng]} icon={makeMyStopIcon()}>
                         <Popup offset={[0, -22]}>
-                          <strong>🚏 {pt.name}</strong>
-                          Your scanned stop
+                          <strong>🚏 {pt.name}</strong> — Your stop
                         </Popup>
                       </Marker>
                     </React.Fragment>
@@ -601,12 +613,18 @@ export default function StopPage() {
                   )
                 )}
 
-                {/* Bus */}
+                {/* ── Bus — compact directional vehicle icon ── */}
                 {busLL && (
-                  <Marker position={busLL} icon={makeBusIcon(bus.busNumber, bus.speed || 0, u)}>
-                    <Popup offset={[0, -52]}>
-                      <strong>🚌 {bus.busNumber}</strong>
-                      {bus.speed || 0} km/h · {fmtLong(bus.etaMinutes)}
+                  <Marker
+                    position={busLL}
+                    icon={makeBusIcon(bus.busNumber, busHeading, u)}
+                    zIndexOffset={1000}
+                  >
+                    <Popup offset={[0, -30]}>
+                      <div style={{ minWidth:'120px' }}>
+                        <strong>🚌 {bus.busNumber}</strong><br/>
+                        <span>{bus.speed || 0} km/h · {fmtLong(bus.etaMinutes)}</span>
+                      </div>
                     </Popup>
                   </Marker>
                 )}
@@ -621,15 +639,13 @@ export default function StopPage() {
                     <Marker position={myLL} icon={makePassengerIcon()}>
                       <Popup offset={[0, -44]}>
                         <strong>📍 You</strong>
-                        {liveDistToBus !== null && `${liveDistToBus} km from bus`}
+                        {liveDistToBus !== null && <><br/>{liveDistToBus} km from bus</>}
                       </Popup>
                     </Marker>
                   </>
                 )}
 
-                {/* ── Map style switcher control ── */}
                 <MapStyleSwitcher current={mapStyleId} onChange={setMapStyleId} />
-
               </MapContainer>
             ) : (
               <div className="sp-map-empty"><span>🗺</span><p>Map unavailable</p></div>
@@ -640,8 +656,10 @@ export default function StopPage() {
               <span className="sp-leg"><span className="sp-leg-line amber"/>Route</span>
               <span className="sp-leg"><span className="sp-leg-dot green"/>Bus</span>
               <span className="sp-leg"><span className="sp-leg-dot amber"/>Stop</span>
-              {myLL && <><span className="sp-leg"><span className="sp-leg-dot neon"/>You</span>
-              <span className="sp-leg"><span className="sp-leg-line neon dashed"/>Walk</span></>}
+              {myLL && <>
+                <span className="sp-leg"><span className="sp-leg-dot neon"/>You</span>
+                <span className="sp-leg"><span className="sp-leg-line neon dashed"/>Walk</span>
+              </>}
             </div>
           </div>
 
@@ -682,10 +700,7 @@ export default function StopPage() {
       {/* ═══ HERO CARD ══════════════════════════════════════════ */}
       {bus && (
         <div className={`sp-hero uh-${u}`}>
-          {/* Ambient glow */}
           <div className={`sp-hero-glow ug-${u}`} />
-
-          {/* Top row */}
           <div className="sp-hero-top">
             <div className="sp-hero-left">
               <div className="sp-hero-label">{activeBus === 0 ? 'Next Bus' : `Bus ${activeBus + 1}`}</div>
@@ -693,8 +708,6 @@ export default function StopPage() {
               {bus.busName && <div className="sp-hero-sub">{bus.busName}</div>}
               <div className="sp-hero-route">Route {bus.routeNumber} — {bus.routeName}</div>
             </div>
-
-            {/* ETA orb */}
             <div className={`sp-eta-orb uo-${u}`}>
               <div className={`sp-eta-orb-ring uor-${u}`} />
               <span className="sp-eta-num">{fmtMin(bus.etaMinutes)}</span>
@@ -702,7 +715,6 @@ export default function StopPage() {
             </div>
           </div>
 
-          {/* Journey breakdown — passenger mode */}
           {myPos && psgr && (
             <div className="sp-journey">
               <div className="sp-jstep">
@@ -724,14 +736,10 @@ export default function StopPage() {
             </div>
           )}
 
-          {/* Progress bar */}
           <div className="sp-prog">
             <div className="sp-prog-track">
-              <div className={`sp-prog-fill upf-${u}`}
-                style={{ width: `${etaPct(bus.etaMinutes)}%` }} />
-              {/* Moving dot on fill */}
-              <div className={`sp-prog-dot upd-${u}`}
-                style={{ left: `${etaPct(bus.etaMinutes)}%` }} />
+              <div className={`sp-prog-fill upf-${u}`} style={{ width:`${etaPct(bus.etaMinutes)}%` }} />
+              <div className={`sp-prog-dot upd-${u}`} style={{ left:`${etaPct(bus.etaMinutes)}%` }} />
             </div>
             <div className="sp-prog-labels">
               <span className={`upt-${u}`}>{fmtLong(bus.etaMinutes)}</span>
@@ -739,7 +747,6 @@ export default function StopPage() {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="sp-stats">
             {myPos ? (
               <>
@@ -768,7 +775,7 @@ export default function StopPage() {
       <footer className="sp-footer">
         {lastRefresh && <span className="sp-muted">Updated {lastRefresh.toLocaleTimeString()}</span>}
         <button className="btn btn-outline btn-sm" onClick={() => fetchData(true)} disabled={isRefreshing}>
-          {isRefreshing ? <><div className="spinner" /> Refreshing…</> : '↻ Refresh'}
+          {isRefreshing ? <><div className="spinner"/> Refreshing…</> : '↻ Refresh'}
         </button>
         <Link to="/" className="sp-back">← All stops</Link>
       </footer>
